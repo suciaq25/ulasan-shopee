@@ -1,0 +1,22 @@
+{
+    "TP": 727,
+    "TN": 443,
+    "FP": 57,
+    "FN": 97,
+    "accuracy": 0.8836858006042296,
+    "precision": 0.9272959183673469,
+    "recall": 0.8822815533980582,
+    "f1_score": 0.904228855721393,
+    "total_data": 1324,
+    "data_path": "review_shopee.csv",
+    "text_col": "comment",
+    "rating_col": "rating",
+    "label_source": "rating >= 4 => positif, rating <= 2 => negatif, rating == 3 dibuang",
+    "vocab_size": 15000,
+    "max_len": 80,
+    "embed_dim": 128,
+    "batch_size": 32,
+    "epochs": 15,
+    "learning_rate": 0.001,
+    "model_path": "Bidirectional_SimpleRNN.keras"
+}
