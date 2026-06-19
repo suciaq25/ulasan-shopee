@@ -307,4 +307,3 @@ c1.metric("TP", metrics["TP"])
 c2.metric("TN", metrics["TN"])
 c3.metric("FP", metrics["FP"])
 c4.metric("FN", metrics["FN"])
-```
