@@ -3,8 +3,10 @@ import re
 import json
 import pickle
 import streamlit as st
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+import tensorflow as tf
+@st.cache_resource
+def load_model_cached():
+    return load_model(MODEL_PATH)
 
 MODEL_PATH = "best_rnn_model.keras"
 TOKENIZER_PATH = "tokenizer.pickle"
