@@ -43,8 +43,6 @@ def load_metrics():
         return json.load(f)
 
 model = load_rnn_model()
-
-model = load_model()
 tokenizer = load_tokenizer()
 metrics = load_metrics()
 
