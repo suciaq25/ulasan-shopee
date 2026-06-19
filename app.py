@@ -1,7 +1,9 @@
+```python
 import os
 import re
 import json
 import pickle
+import pandas as pd
 import streamlit as st
 import tensorflow as tf
 
@@ -85,7 +87,12 @@ def predict_sentiment(text):
     cleaned = clean_text(text)
 
     seq = tokenizer.texts_to_sequences([cleaned])
-    padded = pad_sequences(seq, maxlen=MAX_LEN, padding="post", truncating="post")
+    padded = pad_sequences(
+        seq,
+        maxlen=MAX_LEN,
+        padding="post",
+        truncating="post"
+    )
 
     prob = float(model.predict(padded, verbose=0)[0][0])
 
@@ -98,6 +105,10 @@ def predict_sentiment(text):
 
     return cleaned, label, confidence
 
+
+# =========================
+# SIDEBAR
+# =========================
 
 st.sidebar.image(LOGO_PATH, width=80)
 st.sidebar.title("Shopee")
@@ -113,18 +124,29 @@ st.sidebar.write("Dataset:", metrics["data_path"])
 
 st.sidebar.caption("Project Skripsi Suci © 2025")
 
-col_logo, col_title = st.columns([1,6])
+# =========================
+# HEADER
+# =========================
+
+col_logo, col_title = st.columns([1, 6])
 
 with col_logo:
     st.image(LOGO_PATH, width=90)
 
 with col_title:
     st.title("Shopee Sentiment")
-    st.write("Analisis ulasan aplikasi Shopee menggunakan metode Recurrent Neural Network (RNN).")
+    st.write(
+        "Analisis ulasan aplikasi Shopee menggunakan metode "
+        "Recurrent Neural Network (RNN)."
+    )
 
 st.divider()
 
-col1, col2 = st.columns([1.5,1])
+# =========================
+# PREDIKSI SATU ULASAN
+# =========================
+
+col1, col2 = st.columns([1.5, 1])
 
 with col1:
 
@@ -156,10 +178,101 @@ with col2:
             else:
                 st.error(f"Sentimen: {label}")
 
-            st.write(f"Tingkat keyakinan: {confidence*100:.2f}%")
+            st.write(
+                f"Tingkat keyakinan: {confidence*100:.2f}%"
+            )
+
+            st.progress(float(confidence))
 
             st.write("Teks setelah preprocessing:")
             st.info(cleaned)
+
+# =========================
+# ANALISIS CSV
+# =========================
+
+st.divider()
+
+st.subheader("Analisis Banyak Ulasan (CSV)")
+
+uploaded_file = st.file_uploader(
+    "Upload file CSV",
+    type=["csv"]
+)
+
+if uploaded_file is not None:
+
+    try:
+
+        df = pd.read_csv(uploaded_file)
+
+        st.write("Preview Data")
+
+        st.dataframe(df.head())
+
+        if "ulasan" not in df.columns:
+
+            st.error(
+                "CSV harus memiliki kolom bernama 'ulasan'"
+            )
+
+        else:
+
+            if st.button("ANALISIS CSV"):
+
+                hasil = []
+
+                progress = st.progress(0)
+
+                total = len(df)
+
+                for i, review in enumerate(df["ulasan"]):
+
+                    _, label, confidence = predict_sentiment(
+                        str(review)
+                    )
+
+                    hasil.append({
+                        "ulasan": review,
+                        "sentimen": label,
+                        "confidence (%)": round(
+                            confidence * 100, 2
+                        )
+                    })
+
+                    progress.progress(
+                        (i + 1) / total
+                    )
+
+                result_df = pd.DataFrame(hasil)
+
+                st.success(
+                    f"Analisis selesai ({total} ulasan)"
+                )
+
+                st.dataframe(
+                    result_df,
+                    use_container_width=True
+                )
+
+                csv = result_df.to_csv(
+                    index=False
+                ).encode("utf-8")
+
+                st.download_button(
+                    label="📥 Download Hasil CSV",
+                    data=csv,
+                    file_name="hasil_sentimen.csv",
+                    mime="text/csv"
+                )
+
+    except Exception as e:
+
+        st.error(f"Gagal membaca file: {e}")
+
+# =========================
+# EVALUASI MODEL
+# =========================
 
 st.divider()
 
@@ -167,10 +280,25 @@ st.subheader("Detail Evaluasi Model")
 
 m1, m2, m3, m4 = st.columns(4)
 
-m1.metric("Accuracy", f"{metrics['accuracy']*100:.2f}%")
-m2.metric("Precision", f"{metrics['precision']*100:.2f}%")
-m3.metric("Recall", f"{metrics['recall']*100:.2f}%")
-m4.metric("F1 Score", f"{metrics['f1_score']*100:.2f}%")
+m1.metric(
+    "Accuracy",
+    f"{metrics['accuracy']*100:.2f}%"
+)
+
+m2.metric(
+    "Precision",
+    f"{metrics['precision']*100:.2f}%"
+)
+
+m3.metric(
+    "Recall",
+    f"{metrics['recall']*100:.2f}%"
+)
+
+m4.metric(
+    "F1 Score",
+    f"{metrics['f1_score']*100:.2f}%"
+)
 
 st.subheader("Confusion Matrix")
 
@@ -180,3 +308,4 @@ c1.metric("TP", metrics["TP"])
 c2.metric("TN", metrics["TN"])
 c3.metric("FP", metrics["FP"])
 c4.metric("FN", metrics["FN"])
+```
