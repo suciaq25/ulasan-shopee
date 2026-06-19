@@ -4,9 +4,8 @@ import json
 import pickle
 import streamlit as st
 import tensorflow as tf
-@st.cache_resource
-def load_model_cached():
-    return load_model(MODEL_PATH)
+
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 MODEL_PATH = "best_rnn_model.keras"
 TOKENIZER_PATH = "tokenizer.pickle"
