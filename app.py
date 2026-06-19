@@ -203,71 +203,107 @@ if uploaded_file is not None:
 
     try:
 
-        df = pd.read_csv(uploaded_file)
+        try:
 
-        st.write("Preview Data")
+    try:
+        df = pd.read_csv(
+            uploaded_file,
+            encoding="utf-8",
+            engine="python",
+            on_bad_lines="skip"
+        )
+    except:
+        uploaded_file.seek(0)
 
-        st.dataframe(df.head())
+        df = pd.read_csv(
+            uploaded_file,
+            encoding="latin1",
+            engine="python",
+            on_bad_lines="skip"
+        )
 
-        if "ulasan" not in df.columns:
+    st.write("Preview Data")
+    st.dataframe(df.head())
 
-            st.error(
-                "CSV harus memiliki kolom bernama 'ulasan'"
+    # otomatis cari kolom ulasan
+    review_col = None
+
+    possible_cols = [
+        "ulasan",
+        "review",
+        "content",
+        "comment",
+        "komentar",
+        "text"
+    ]
+
+    for col in df.columns:
+        if col.lower() in possible_cols:
+            review_col = col
+            break
+
+    if review_col is None:
+
+        st.error(
+            f"Kolom ulasan tidak ditemukan. Kolom yang tersedia: {list(df.columns)}"
+        )
+
+    else:
+
+        st.success(f"Menggunakan kolom: {review_col}")
+
+        if st.button("ANALISIS CSV"):
+
+            hasil = []
+
+            progress = st.progress(0)
+
+            total = len(df)
+
+            for i, review in enumerate(df[review_col]):
+
+                _, label, confidence = predict_sentiment(
+                    str(review)
+                )
+
+                hasil.append({
+                    "ulasan": review,
+                    "sentimen": label,
+                    "confidence (%)": round(
+                        confidence * 100,
+                        2
+                    )
+                })
+
+                progress.progress(
+                    (i + 1) / total
+                )
+
+            result_df = pd.DataFrame(hasil)
+
+            st.success(
+                f"Analisis selesai ({total} ulasan)"
             )
 
-        else:
+            st.dataframe(
+                result_df,
+                use_container_width=True
+            )
 
-            if st.button("ANALISIS CSV"):
+            csv = result_df.to_csv(
+                index=False
+            ).encode("utf-8")
 
-                hasil = []
+            st.download_button(
+                "📥 Download Hasil CSV",
+                csv,
+                "hasil_sentimen.csv",
+                "text/csv"
+            )
 
-                progress = st.progress(0)
+except Exception as e:
 
-                total = len(df)
-
-                for i, review in enumerate(df["ulasan"]):
-
-                    _, label, confidence = predict_sentiment(
-                        str(review)
-                    )
-
-                    hasil.append({
-                        "ulasan": review,
-                        "sentimen": label,
-                        "confidence (%)": round(
-                            confidence * 100, 2
-                        )
-                    })
-
-                    progress.progress(
-                        (i + 1) / total
-                    )
-
-                result_df = pd.DataFrame(hasil)
-
-                st.success(
-                    f"Analisis selesai ({total} ulasan)"
-                )
-
-                st.dataframe(
-                    result_df,
-                    use_container_width=True
-                )
-
-                csv = result_df.to_csv(
-                    index=False
-                ).encode("utf-8")
-
-                st.download_button(
-                    label="📥 Download Hasil CSV",
-                    data=csv,
-                    file_name="hasil_sentimen.csv",
-                    mime="text/csv"
-                )
-
-    except Exception as e:
-
-        st.error(f"Gagal membaca file: {e}")
+    st.error(f"Gagal membaca file: {e}")
 
 # =========================
 # EVALUASI MODEL
