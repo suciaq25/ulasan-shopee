@@ -29,7 +29,7 @@ check_file(METRICS_PATH, "metrics")
 check_file(LOGO_PATH, "logo")
 
 @st.cache_resource
-def load_model():
+def load_rnn_model():
     return tf.keras.models.load_model(MODEL_PATH)
 
 @st.cache_resource
@@ -41,6 +41,8 @@ def load_tokenizer():
 def load_metrics():
     with open(METRICS_PATH, "r") as f:
         return json.load(f)
+
+model = load_rnn_model()
 
 model = load_model()
 tokenizer = load_tokenizer()
