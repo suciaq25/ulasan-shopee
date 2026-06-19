@@ -202,9 +202,7 @@ uploaded_file = st.file_uploader(
 if uploaded_file is not None:
 
     try:
-
-        try:
-
+        
     try:
         df = pd.read_csv(
             uploaded_file,
